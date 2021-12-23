@@ -4,8 +4,8 @@ import threading
 import time
 import keyboard
 
-
 __is_running = False
+__is_first_lunch = True
 
 __actionner = ['&', 'é', '"', 'a', 'e', 'f']
 
@@ -23,6 +23,11 @@ class AntiAfkThread(threading.Thread):
 def set_is_running(action: bool):
     global __is_running
     __is_running = action
+
+
+def set_is_first_lunch(action: bool):
+    global __is_first_lunch
+    __is_first_lunch = action
 
 
 def get_is_running():
@@ -44,6 +49,7 @@ def __set_delay():
 
 
 def __start(anti_afk_thread: threading.Thread):
+    set_is_first_lunch(False)
     print("started at " + datetime.now().strftime("%H:%M:%S"))
     time.sleep(1)
     anti_afk_thread.start()
@@ -54,6 +60,7 @@ def __stop(anti_afk_thread: threading.Thread):
         print("stopped at " + datetime.now().strftime("%H:%M:%S"))
         time.sleep(1)
         set_is_running(False)
+        set_is_first_lunch(True)
         anti_afk_thread.join()
 
 
@@ -73,6 +80,7 @@ def anti_afk(delay):
         time.sleep(1)
         if not get_is_running():
             break
+    set_is_running(False)
 
 
 def stop_application():
@@ -93,3 +101,7 @@ while True:
         __stop(__get_afk_thread("anti_afk"))
         print("exit application")
         break
+    if not get_is_running():
+        if not __is_first_lunch:
+            go("anti_afk", __set_delay()).start()
+
